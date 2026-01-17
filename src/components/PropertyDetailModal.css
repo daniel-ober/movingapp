@@ -1,0 +1,192 @@
+/* src/components/PropertyDetailModal.css */
+
+.pdm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+  padding: 24px;
+}
+
+.pdm-modal {
+  width: min(980px, 100%);
+  max-height: min(86vh, 900px);
+  overflow: auto;
+  border-radius: 18px;
+  background: rgba(12, 15, 22, 0.92);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 18px 80px rgba(0,0,0,0.55);
+  padding: 18px;
+}
+
+.pdm-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.pdm-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.92);
+}
+
+.pdm-subtitle {
+  margin-top: 4px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.55);
+}
+
+.pdm-tabs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0 14px;
+}
+
+.pdm-tab {
+  border-radius: 999px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.75);
+  cursor: pointer;
+}
+
+.pdm-tab.is-active {
+  background: rgba(140, 124, 255, 0.18);
+  border-color: rgba(140, 124, 255, 0.35);
+  color: rgba(255,255,255,0.92);
+}
+
+.pdm-scorechip {
+  margin-left: auto;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.80);
+}
+
+.pdm-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 14px;
+}
+
+@media (max-width: 860px) {
+  .pdm-grid { grid-template-columns: 1fr; }
+}
+
+.pdm-field span {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 8px;
+  color: rgba(255,255,255,0.62);
+}
+
+.pdm-field input,
+.pdm-field select,
+.pdm-field textarea {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.90);
+  padding: 12px 12px;
+  outline: none;
+}
+
+.pdm-field textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.pdm-notes {
+  grid-column: 1 / -1;
+}
+
+.pdm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+/* Score tab */
+.pdm-score {
+  display: grid;
+  gap: 14px;
+}
+
+.pdm-scoregrid {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+}
+
+.pdm-scorerow {
+  display: grid;
+  grid-template-columns: 160px 1fr 70px;
+  align-items: center;
+  gap: 10px;
+}
+
+@media (max-width: 860px) {
+  .pdm-scorerow { grid-template-columns: 120px 1fr 60px; }
+}
+
+.pdm-scorerow-label {
+  color: rgba(255,255,255,0.75);
+  font-size: 13px;
+}
+
+.pdm-scorerow-val {
+  text-align: right;
+  color: rgba(255,255,255,0.75);
+  font-variant-numeric: tabular-nums;
+}
+
+.pdm-range {
+  width: 100%;
+}
+
+.pdm-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(255,255,255,0.72);
+  font-size: 13px;
+}
+
+.pdm-breakdown {
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(0,0,0,0.20);
+  padding: 12px;
+  overflow: auto;
+}
+
+.pdm-breakdown-title {
+  color: rgba(255,255,255,0.70);
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.pdm-breakdown pre {
+  margin: 0;
+  color: rgba(255,255,255,0.65);
+  font-size: 12px;
+}

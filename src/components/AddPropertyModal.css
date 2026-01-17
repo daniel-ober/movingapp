@@ -1,0 +1,174 @@
+/* src/components/AddPropertyModal.css */
+
+.apm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.68);
+  display: grid;
+  place-items: center;
+  z-index: 80;
+
+  /* Mobile safe padding + prevents edge clipping */
+  padding: 14px;
+  padding-bottom: max(14px, env(safe-area-inset-bottom));
+  padding-top: max(14px, env(safe-area-inset-top));
+}
+
+.apm-modal {
+  width: min(900px, 100%);
+  border-radius: 22px;
+  border: 1px solid var(--border);
+  background: rgba(15, 18, 28, 0.95);
+  box-shadow: 0 18px 70px rgba(0, 0, 0, 0.55);
+
+  /* Key fix: keep modal within viewport */
+  max-height: calc(100dvh - 28px);
+  overflow: hidden;
+
+  /* Turn into 3-row layout: header / scroll body / actions */
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+
+  padding: 0; /* padding is handled per-section */
+}
+
+.apm-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding: 14px 14px 12px;
+  border-bottom: 1px solid var(--border);
+
+  /* Keep header visible while scrolling content */
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: rgba(15, 18, 28, 0.98);
+  backdrop-filter: blur(8px);
+}
+
+.apm-title {
+  font-weight: 900;
+  letter-spacing: 0.2px;
+  font-size: 18px;
+}
+
+.apm-subtitle {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--muted2);
+  line-height: 1.35;
+}
+
+/* Scrollable content region */
+.apm-grid {
+  padding: 12px 14px 14px;
+
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (min-width: 860px) {
+  .apm-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 14px;
+  }
+}
+
+.apm-field {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+  min-width: 0;
+}
+
+.apm-field span {
+  color: var(--muted2);
+}
+
+.apm-field input,
+.apm-field select,
+.apm-field textarea {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  padding: 10px 12px;
+  outline: none;
+
+  /* Helps mobile zoom/overflow issues */
+  font-size: 16px;
+  min-width: 0;
+}
+
+.apm-field input:focus,
+.apm-field select:focus,
+.apm-field textarea:focus {
+  border-color: rgba(106, 168, 255, 0.35);
+  box-shadow: 0 0 0 3px rgba(106, 168, 255, 0.12);
+}
+
+.apm-notes {
+  grid-column: 1 / -1;
+}
+
+.apm-field textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+/* Sticky footer actions */
+.apm-actions {
+  border-top: 1px solid var(--border);
+  padding: 12px 14px;
+
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  background: rgba(15, 18, 28, 0.98);
+  backdrop-filter: blur(8px);
+}
+
+/* Mobile polish */
+@media (max-width: 520px) {
+  .apm-overlay {
+    padding: 10px;
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+    padding-top: max(10px, env(safe-area-inset-top));
+  }
+
+  .apm-modal {
+    border-radius: 18px;
+    max-height: calc(100dvh - 20px);
+  }
+
+  .apm-head {
+    padding: 12px 12px 10px;
+  }
+
+  .apm-grid {
+    padding: 10px 12px 12px;
+    gap: 10px;
+  }
+
+  .apm-actions {
+    padding: 10px 12px;
+    justify-content: space-between;
+  }
+
+  .apm-actions .btn {
+    flex: 1;
+  }
+}

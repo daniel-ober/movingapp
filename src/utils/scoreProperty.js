@@ -58,33 +58,33 @@ export const MUST_HAVES = [
 
 export const PLUSES = [
   "fenced_yard",
-  "large_sink",
   "garage",
   "fridge_french_or_side_by_side",
-  "washer_dryer_included", // BONUS+++ (machines included)
+  "washer_dryer_included",
   "microwave",
   "seasonal_decor_space",
+  "large_sink",
 ];
 
 export const CHECKLIST_LABELS = {
-  dishwasher: "Dishwasher",
-  laundry_hookups: "Laundry area + hookups (machines optional)",
-  large_kitchen: "Large kitchen / counter space",
-  dining_area: "Dining area",
-  living_room: "Living room area",
   bedrooms_3_plus: "3+ bedrooms (master + guest + craft)",
   bonus_spaces_2_plus: "2+ bonus spaces (Chelsea + Dan zones)",
   bathrooms_2_plus: "2+ bathrooms",
+  dining_area: "Dining area",
+  living_room: "Living room area",
+  dishwasher: "Dishwasher",
+  laundry_hookups: "Laundry area + hookups (machines optional)",
+  large_kitchen: "Large kitchen / counter space",
   backyard_medium_large: "Medium-to-large backyard",
-  att_service: "AT&T cell service works",
-  verizon_service: "Verizon cell service works",
   outdoor_storage: "Space for outdoor/camping items",
   tools_wood_cut_space: "Space for tools + place to cut wood",
-  small_driveway: "Small driveway",
+  small_driveway: "Driveway",
   fridge_freezer: "Fridge/freezer",
   oven_stove: "Oven/stove",
   garden_space: "Space to garden/grow vegetables",
   patio_grill_space: "Patio space (grill/lounge/table)",
+  att_service: "AT&T cell service works",
+  verizon_service: "Verizon cell service works",
 
   fenced_yard: "Fenced-in backyard",
   large_sink: "Large sink",
@@ -123,7 +123,10 @@ export function computeOverallScore(property) {
 
     return {
       score: 0,
-      meta: { disqualifiedMoveIn: true, earliestMoveIn: property?.earliestMoveIn || "" },
+      meta: {
+        disqualifiedMoveIn: true,
+        earliestMoveIn: property?.earliestMoveIn || "",
+      },
       why: [`Disqualified: move-in ${pretty} or later.`],
     };
   }
@@ -139,11 +142,7 @@ export function computeOverallScore(property) {
 
   // -------- DETAILS SCORE (max ~60) --------
   // Commute (max 20): <=15 = 20, 25 = 14, 35 = 7, 45+ = 0
-  const commuteScore = clamp(
-    20 - ((commuteMin - 15) * 20) / 30,
-    0,
-    20
-  );
+  const commuteScore = clamp(20 - ((commuteMin - 15) * 20) / 30, 0, 20);
 
   // Rent (max 18): <=2200 = 18, 2500 = 12, 2900 = 5, 3200+ = 0
   const rentScore = clamp(18 - ((rent - 2200) * 18) / 1000, 0, 18);
@@ -208,8 +207,10 @@ export function computeOverallScore(property) {
   if (rent) why.push(`Rent: $${rent.toLocaleString()}/mo`);
   if (sqft) why.push(`Space: ${sqft.toLocaleString()} sqft`);
 
-  if (mustMissingCount > 0) why.push(`⚠ Missing ${mustMissingCount} must-have(s)`);
-  else if (mustMetCount >= 6) why.push(`✅ Must-haves confirmed: ${mustMetCount}`);
+  if (mustMissingCount > 0)
+    why.push(`⚠ Missing ${mustMissingCount} must-have(s)`);
+  else if (mustMetCount >= 6)
+    why.push(`✅ Must-haves confirmed: ${mustMetCount}`);
 
   const trimmedWhy = why.slice(0, 3);
 
@@ -228,6 +229,8 @@ export function computeOverallScore(property) {
       mustMissingCount,
       plusPoints,
     },
-    why: trimmedWhy.length ? trimmedWhy : ["Add checklist + details to rank it."],
+    why: trimmedWhy.length
+      ? trimmedWhy
+      : ["Add checklist + details to rank it."],
   };
 }

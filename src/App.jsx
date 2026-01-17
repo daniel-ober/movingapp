@@ -43,20 +43,44 @@ export default function App() {
     };
   }, []);
 
+  // Build a lookup so cards can display a company name even when property only stores managementCompanyId
+  const companyById = useMemo(() => {
+    const map = {};
+    for (const c of companies || []) map[c.id] = c;
+    return map;
+  }, [companies]);
+
+  // Hydrate properties with a consistent display name:
+  // - if they typed a company name (managementCompanyName), use it
+  // - else if they selected an existing company (managementCompanyId), resolve it here
+  const hydratedProperties = useMemo(() => {
+    return (properties || []).map((p) => {
+      const resolvedName =
+        (p?.managementCompanyName || "").trim() ||
+        (p?.managementCompanyId && companyById[p.managementCompanyId]?.name) ||
+        "";
+      return { ...p, managementCompanyName: resolvedName };
+    });
+  }, [properties, companyById]);
+
   const activeQuickEdit = useMemo(
-    () => properties.find((p) => p.id === quickEditId) || null,
-    [properties, quickEditId]
+    () => hydratedProperties.find((p) => p.id === quickEditId) || null,
+    [hydratedProperties, quickEditId]
   );
 
   const activeChecklist = useMemo(
-    () => properties.find((p) => p.id === checklistId) || null,
-    [properties, checklistId]
+    () => hydratedProperties.find((p) => p.id === checklistId) || null,
+    [hydratedProperties, checklistId]
   );
 
   const { top3, interestedNotVisited, interestedVisited, notInterested } =
     useMemo(() => {
-      const interested = properties.filter((p) => p.status !== "not_interested");
-      const notInt = properties.filter((p) => p.status === "not_interested");
+      const interested = hydratedProperties.filter(
+        (p) => p.status !== "not_interested"
+      );
+      const notInt = hydratedProperties.filter(
+        (p) => p.status === "not_interested"
+      );
 
       const notVisited = interested
         .filter((p) => p.visitStatus !== "visited")
@@ -75,14 +99,13 @@ export default function App() {
         interestedVisited: visited,
         notInterested: notInt.sort(sortByScoreDesc),
       };
-    }, [properties]);
+    }, [hydratedProperties]);
 
   const winner = top3[0];
   const silver = top3[1];
   const bronze = top3[2];
 
   async function handleCreate(form) {
-    // createProperty already writes, so we just do that.
     return createProperty(form);
   }
 
@@ -91,7 +114,7 @@ export default function App() {
   }
 
   async function handleSaveQuickEdit(id, patch) {
-    const current = properties.find((p) => p.id === id);
+    const current = hydratedProperties.find((p) => p.id === id);
     const merged = { ...(current || {}), ...(patch || {}) };
 
     const scored = computeOverallScore(merged);
@@ -104,7 +127,7 @@ export default function App() {
   }
 
   async function handleSaveChecklist(id, checklistPatch) {
-    const current = properties.find((p) => p.id === id);
+    const current = hydratedProperties.find((p) => p.id === id);
     const merged = {
       ...(current || {}),
       checklist: {
@@ -126,7 +149,6 @@ export default function App() {
     const next = p.visitStatus === "visited" ? "not_visited" : "visited";
     const merged = { ...p, visitStatus: next };
     const scored = computeOverallScore(merged);
-
     await updateProperty(p.id, {
       visitStatus: next,
       score: scored.score,
@@ -137,19 +159,7 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      {/* TopBar now handles: left app name, center date, right docs */}
-      <TopBar />
-
-      {/* Primary CTA sits between top bar and Top Choices */}
-      <div className="app-ctaRow">
-        <button
-          className="btn btn-primary app-ctaBtn"
-          type="button"
-          onClick={() => setAddOpen(true)}
-        >
-          + Add Property
-        </button>
-      </div>
+      <TopBar onAddProperty={() => setAddOpen(true)} />
 
       <AddPropertyModal
         open={addOpen}

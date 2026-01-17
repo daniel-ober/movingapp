@@ -13,7 +13,7 @@ function formatToday() {
 const DOCS = [
   {
     label: "Move Cheat Sheet (One Pager)",
-    href: "/docs/Move_Cheat_Sheet_One_Pager_v2.pdf",
+    href: "/docs/Move_Cheat_Sheet_One_Pager_v3.pdf",
   },
   {
     label: "Master Move Rental Transition Plan",

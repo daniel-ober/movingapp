@@ -82,7 +82,6 @@ export default function App() {
   const bronze = top3[2];
 
   async function handleCreate(form) {
-    // Create property, then compute initial score (usually low until checklist)
     // createProperty already writes, so we just do that.
     return createProperty(form);
   }
@@ -92,7 +91,6 @@ export default function App() {
   }
 
   async function handleSaveQuickEdit(id, patch) {
-    // Merge patch into current property to compute score
     const current = properties.find((p) => p.id === id);
     const merged = { ...(current || {}), ...(patch || {}) };
 
@@ -128,6 +126,7 @@ export default function App() {
     const next = p.visitStatus === "visited" ? "not_visited" : "visited";
     const merged = { ...p, visitStatus: next };
     const scored = computeOverallScore(merged);
+
     await updateProperty(p.id, {
       visitStatus: next,
       score: scored.score,
@@ -138,7 +137,19 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <TopBar onAddProperty={() => setAddOpen(true)} />
+      {/* TopBar now handles: left app name, center date, right docs */}
+      <TopBar />
+
+      {/* Primary CTA sits between top bar and Top Choices */}
+      <div className="app-ctaRow">
+        <button
+          className="btn btn-primary app-ctaBtn"
+          type="button"
+          onClick={() => setAddOpen(true)}
+        >
+          + Add Property
+        </button>
+      </div>
 
       <AddPropertyModal
         open={addOpen}
@@ -171,7 +182,12 @@ export default function App() {
         >
           <div className="medals-grid">
             {winner ? (
-              <MedalCard medal="gold" title="Top-Runner" property={winner} isWinner />
+              <MedalCard
+                medal="gold"
+                title="Top-Runner"
+                property={winner}
+                isWinner
+              />
             ) : (
               <MedalCard
                 medal="gold"

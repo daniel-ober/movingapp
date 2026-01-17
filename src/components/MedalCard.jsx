@@ -1,10 +1,9 @@
-// src/components/MedalCard.jsx
 import "./MedalCard.css";
 import { MUST_HAVES, PLUSES, CHECKLIST_LABELS } from "../utils/scoreProperty";
 
 function fmtMoney(n) {
   const x = Number(n);
-  if (!Number.isFinite(x) || x <= 0) return "$0.00/mo";
+  if (!Number.isFinite(x) || x <= 0) return "$0/mo";
   return (
     x.toLocaleString("en-US", {
       style: "currency",
@@ -17,6 +16,14 @@ function fmtMoney(n) {
 function safeInt(v) {
   const n = Number(v);
   return Number.isFinite(n) ? n : 0;
+}
+
+function commuteClass(mins) {
+  const m = safeInt(mins);
+  if (m <= 15) return "commute-good";
+  if (m <= 20) return "commute-ok";
+  if (m <= 30) return "commute-warn";
+  return "commute-bad";
 }
 
 function getChecklistHighlights(property) {
@@ -45,25 +52,30 @@ export function MedalCard({ medal, title, property, isWinner }) {
   const commute = property?.commuteMinutes ?? 0;
   const score = safeInt(property?.score);
 
+  const mgmtName =
+    (property?.managementCompanyName || "").trim() ||
+    (property?.managementCompany || "").trim();
+
   const { dealbreaker, mustNo, plusOn } = getChecklistHighlights(property);
 
-  // keep this tight so it doesn’t overwhelm the top cards
   const MAX_CHIPS = 3;
   const noChips = mustNo.slice(0, MAX_CHIPS);
   const plusChips = plusOn.slice(0, MAX_CHIPS);
 
-  const extraCount = Math.max(0, mustNo.length - noChips.length) + Math.max(0, plusOn.length - plusChips.length);
+  const extraCount =
+    Math.max(0, mustNo.length - noChips.length) +
+    Math.max(0, plusOn.length - plusChips.length);
+
+  const medalEmoji = medal === "gold" ? "🥇" : medal === "silver" ? "🥈" : "🥉";
 
   return (
     <div className={`mc-card mc-${medal} ${isWinner ? "is-winner" : ""}`}>
       <div className="mc-top">
-        <div className="mc-left">
-          <div className="mc-titleRow">
-            <span className="mc-medalIcon" aria-hidden="true">
-              {medal === "gold" ? "🥇" : medal === "silver" ? "🥈" : "🥉"}
-            </span>
-            <span className="mc-title">{title}</span>
-          </div>
+        <div className="mc-titleRow">
+          <span className="mc-medalIcon" aria-hidden="true">
+            {medalEmoji}
+          </span>
+          <span className="mc-title">{title}</span>
         </div>
 
         <div className="mc-score">
@@ -74,52 +86,59 @@ export function MedalCard({ medal, title, property, isWinner }) {
 
       <div className="mc-address">{property?.address || "—"}</div>
 
+      {/* ✅ NEW: management company */}
+      {mgmtName ? (
+        <div className="mc-mgmt" title="Property Management Company">
+          <span className="mc-mgmtLabel">Mgmt:</span>{" "}
+          <span className="mc-mgmtName">{mgmtName}</span>
+        </div>
+      ) : null}
+
       <div className="mc-meta">
-        {fmtMoney(property?.rentMonthly)} &nbsp;•&nbsp; {beds} bd / {baths} ba
-        &nbsp;•&nbsp; {safeInt(sqft).toLocaleString()} sqft
+        {fmtMoney(property?.rentMonthly)} • {beds} bd / {baths} ba •{" "}
+        {safeInt(sqft).toLocaleString()} sqft
       </div>
 
       <div className="mc-meta2">
-        Chelsea commute: <b>{safeInt(commute)} min</b>
+        Chelsea commute:{" "}
+        <b className={commuteClass(commute)}>{safeInt(commute)} min</b>
       </div>
 
-      {/* ✅ NEW: Checklist highlights */}
-      {dealbreaker || mustNo.length || plusOn.length ? (
+      {property?.originalLink ? (
+        <div className="mc-link">
+          <a
+            href={property.originalLink}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            View Listing ↗
+          </a>
+        </div>
+      ) : null}
+
+      {(dealbreaker || mustNo.length || plusOn.length) && (
         <div className="mc-chips">
-          {dealbreaker ? (
+          {dealbreaker && (
             <span className="mc-chip mc-chip-deal">Dealbreaker</span>
-          ) : null}
+          )}
 
           {noChips.map((k) => (
-            <span key={`no-${k}`} className="mc-chip mc-chip-no" title="Non-negotiable marked NO">
-              <span className="mc-chipTag">No:</span> {labelForKey(k)}
+            <span key={`no-${k}`} className="mc-chip mc-chip-no">
+              {labelForKey(k)}
             </span>
           ))}
 
           {plusChips.map((k) => (
-            <span key={`plus-${k}`} className="mc-chip mc-chip-plus" title="Nice-to-have marked ON">
-              <span className="mc-chipTag">Plus:</span> {labelForKey(k)}
+            <span key={`plus-${k}`} className="mc-chip mc-chip-plus">
+              {labelForKey(k)}
             </span>
           ))}
 
-          {extraCount > 0 ? (
-            <span className="mc-chip mc-chip-more" title="More checklist highlights not shown">
-              +{extraCount} more
-            </span>
-          ) : null}
+          {extraCount > 0 && (
+            <span className="mc-chip mc-chip-more">+{extraCount} more</span>
+          )}
         </div>
-      ) : null}
-
-      {property?.why?.length ? (
-        <div className="mc-why">
-          <div className="mc-whyTitle">Why it’s #{medal === "gold" ? 1 : medal === "silver" ? 2 : 3}</div>
-          <ul className="mc-whyList">
-            {property.why.slice(0, 3).map((w, i) => (
-              <li key={i}>{w}</li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+      )}
     </div>
   );
 }

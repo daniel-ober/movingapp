@@ -1,5 +1,3 @@
-/* src/components/PropertyCard.css */
-
 .pc-card {
   border-radius: 22px;
   border: 1px solid var(--border);
@@ -7,20 +5,90 @@
   background: rgba(0, 0, 0, 0.25);
 }
 
+.pc-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
 .pc-title {
   font-weight: 800;
   font-size: 16px;
+  margin-bottom: 2px;
+  line-height: 1.2;
+}
+
+/* ✅ NEW: mgmt line */
+.pc-mgmt {
+  font-size: 12px;
+  color: var(--muted2);
   margin-bottom: 6px;
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.pc-mgmtLabel {
+  letter-spacing: 0.12em;
+  font-weight: 900;
+  text-transform: uppercase;
+  opacity: 0.85;
+  font-size: 11px;
+}
+
+.pc-mgmtName {
+  color: rgba(255, 255, 255, 0.82);
+  font-weight: 800;
 }
 
 .pc-meta {
   font-size: 13px;
   color: var(--muted);
-  margin-bottom: 14px;
+  margin-bottom: 10px;
+  line-height: 1.35;
 }
 
-/* ───────────────── Actions Row ───────────────── */
+/* Commute coloring */
+.pc-commute {
+  font-weight: 900;
+}
 
+.commute-good {
+  color: #22c55e;
+}
+
+.commute-ok {
+  color: #eab308;
+}
+
+.commute-warn {
+  color: #f97316;
+}
+
+.commute-bad {
+  color: #ef4444;
+}
+
+/* Listing link */
+.pc-link {
+  margin: 2px 0 12px;
+}
+
+.pc-link a {
+  font-size: 12px;
+  font-weight: 700;
+  color: #9cc4ff;
+  text-decoration: none;
+}
+
+.pc-link a:hover {
+  text-decoration: underline;
+}
+
+/* Actions */
 .pc-actions {
   display: flex;
   align-items: center;
@@ -37,36 +105,22 @@
 
 /* Score badge */
 .pc-score-badge {
-  min-width: 44px;
+  min-width: 48px;
   height: 36px;
-
   display: grid;
   place-items: center;
-
   border-radius: 999px;
-  font-weight: 800;
+  font-weight: 900;
   font-size: 14px;
-
-  background: linear-gradient(
-    135deg,
-    #8b8cff,
-    #6f6bff
-  );
-
+  background: linear-gradient(135deg, #8b8cff, #6f6bff);
   color: #fff;
   box-shadow: 0 6px 20px rgba(111, 107, 255, 0.35);
 }
 
-/* ───────────────── Mobile polish ───────────────── */
-
 @media (max-width: 520px) {
-  .pc-actions {
-    align-items: flex-start;
-  }
-
   .pc-score-badge {
     height: 34px;
-    min-width: 42px;
+    min-width: 46px;
     font-size: 13px;
   }
 }

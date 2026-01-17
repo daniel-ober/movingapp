@@ -1,4 +1,3 @@
-// src/components/ChecklistModal.jsx
 import { useEffect, useMemo, useState } from "react";
 import "./ChecklistModal.css";
 import { MUST_HAVES, PLUSES, CHECKLIST_LABELS } from "../utils/scoreProperty";
@@ -9,9 +8,7 @@ import { MUST_HAVES, PLUSES, CHECKLIST_LABELS } from "../utils/scoreProperty";
  */
 function pruneUndefined(value) {
   if (Array.isArray(value)) {
-    return value
-      .map(pruneUndefined)
-      .filter((v) => v !== undefined);
+    return value.map(pruneUndefined).filter((v) => v !== undefined);
   }
 
   if (value && typeof value === "object") {
@@ -76,7 +73,6 @@ export function ChecklistModal({ open, onClose, property, onSave }) {
 
     setSaving(true);
     try {
-      // Build raw payload (may include undefined in tri-state maps)
       const rawChecklist = {
         mustHaves,
         pluses,
@@ -85,7 +81,6 @@ export function ChecklistModal({ open, onClose, property, onSave }) {
         updatedAtLocal: Date.now(),
       };
 
-      // IMPORTANT: strip undefined so Firestore will accept the write
       const cleanedChecklist = pruneUndefined(rawChecklist);
 
       await onSave(property.id, cleanedChecklist);
@@ -95,91 +90,101 @@ export function ChecklistModal({ open, onClose, property, onSave }) {
     }
   }
 
+  function handleOverlayMouseDown() {
+    // Overlay click closes modal (don’t wipe state here, just close)
+    onClose();
+  }
+
   return (
-    <div className="cm-overlay" onMouseDown={onClose}>
+    <div className="cm-overlay" onMouseDown={handleOverlayMouseDown}>
       <div className="cm-modal" onMouseDown={(e) => e.stopPropagation()}>
         <div className="cm-head">
           <div>
             <div className="cm-title">Checklist</div>
             <div className="cm-subtitle">{property.address || "—"}</div>
           </div>
+
           <button className="btn btn-ghost" type="button" onClick={onClose}>
             Close
           </button>
         </div>
 
-        <div className="cm-grid">
-          <div className="cm-col">
-            <div className="cm-sectionTitle">Must-haves (weighted heavy)</div>
-            <div className="cm-hint">
-              Tap to cycle: Unknown → Yes → No → Unknown
+        {/* ✅ Scrollable body */}
+        <div className="cm-body">
+          <div className="cm-grid">
+            <div className="cm-col">
+              <div className="cm-sectionTitle">Must-haves (weighted heavy)</div>
+              <div className="cm-hint">
+                Tap to cycle: Unknown → Yes → No → Unknown
+              </div>
+
+              <div className="cm-list">
+                {MUST_HAVES.map((k) => {
+                  const v = mustHaves[k];
+                  const state = v === true ? "yes" : v === false ? "no" : "unk";
+
+                  return (
+                    <button
+                      key={k}
+                      type="button"
+                      className={`cm-item cm-${state}`}
+                      onClick={() => cycleMustHave(k)}
+                    >
+                      <span className="cm-dot" />
+                      <span className="cm-label">{CHECKLIST_LABELS[k] || k}</span>
+                      <span className="cm-state">
+                        {v === true ? "Yes" : v === false ? "No" : "—"}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
-            <div className="cm-list">
-              {MUST_HAVES.map((k) => {
-                const v = mustHaves[k];
-                const state = v === true ? "yes" : v === false ? "no" : "unk";
+            <div className="cm-col">
+              <div className="cm-sectionTitle">Pluses (nice-to-have)</div>
+              <div className="cm-hint">Tap to toggle: Off / On</div>
 
-                return (
-                  <button
-                    key={k}
-                    type="button"
-                    className={`cm-item cm-${state}`}
-                    onClick={() => cycleMustHave(k)}
-                  >
-                    <span className="cm-dot" />
-                    <span className="cm-label">{CHECKLIST_LABELS[k] || k}</span>
-                    <span className="cm-state">
-                      {v === true ? "Yes" : v === false ? "No" : "—"}
-                    </span>
-                  </button>
-                );
-              })}
+              <div className="cm-list">
+                {PLUSES.map((k) => {
+                  const on = pluses[k] === true;
+                  return (
+                    <button
+                      key={k}
+                      type="button"
+                      className={`cm-item cm-plus ${on ? "is-on" : ""}`}
+                      onClick={() => togglePlus(k)}
+                    >
+                      <span className="cm-dot" />
+                      <span className="cm-label">{CHECKLIST_LABELS[k] || k}</span>
+                      <span className="cm-state">{on ? "On" : "—"}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <label className="cm-deal">
+                <input
+                  type="checkbox"
+                  checked={dealbreaker}
+                  onChange={(e) => setDealbreaker(e.target.checked)}
+                />
+                <span>Dealbreaker (score becomes 0)</span>
+              </label>
+
+              <label className="cm-notes">
+                <span>Checklist Notes</span>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Dealbreakers, trade-offs, gut feel, tour notes..."
+                />
+              </label>
             </div>
-          </div>
-
-          <div className="cm-col">
-            <div className="cm-sectionTitle">Pluses (nice-to-have)</div>
-            <div className="cm-hint">Tap to toggle: Off / On</div>
-
-            <div className="cm-list">
-              {PLUSES.map((k) => {
-                const on = pluses[k] === true;
-                return (
-                  <button
-                    key={k}
-                    type="button"
-                    className={`cm-item cm-plus ${on ? "is-on" : ""}`}
-                    onClick={() => togglePlus(k)}
-                  >
-                    <span className="cm-dot" />
-                    <span className="cm-label">{CHECKLIST_LABELS[k] || k}</span>
-                    <span className="cm-state">{on ? "On" : "—"}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            <label className="cm-deal">
-              <input
-                type="checkbox"
-                checked={dealbreaker}
-                onChange={(e) => setDealbreaker(e.target.checked)}
-              />
-              <span>Dealbreaker (score becomes 0)</span>
-            </label>
-
-            <label className="cm-notes">
-              <span>Checklist Notes</span>
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Dealbreakers, trade-offs, gut feel, tour notes..."
-              />
-            </label>
           </div>
         </div>
 
+        {/* ✅ Sticky footer actions */}
         <div className="cm-actions">
           <button className="btn btn-ghost" type="button" onClick={onClose}>
             Cancel

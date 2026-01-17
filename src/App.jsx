@@ -160,7 +160,16 @@ export default function App() {
   return (
     <div className="app-shell">
       <TopBar onAddProperty={() => setAddOpen(true)} />
-
+      {/* Primary CTA sits between top bar and Top Choices */}
+      <div className="app-ctaRow">
+        <button
+          className="btn btn-primary app-ctaBtn"
+          type="button"
+          onClick={() => setAddOpen(true)}
+        >
+          + Add Property
+        </button>
+      </div>
       <AddPropertyModal
         open={addOpen}
         onClose={() => setAddOpen(false)}

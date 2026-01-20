@@ -3,10 +3,13 @@ import { useMemo, useState } from "react";
 import "./AddPropertyModal.css";
 
 const DEFAULTS = {
+  listingType: "rent", // ✅ NEW: "rent" | "buy"
   status: "interested",
   visitStatus: "not_visited",
   address: "",
   rentMonthly: "",
+  purchasePrice: "", // ✅ NEW
+  hoaMonthly: "", // ✅ NEW
   beds: "3",
   baths: "2",
   sqft: "",
@@ -14,8 +17,8 @@ const DEFAULTS = {
   commuteMiles: "",
   commuteMinutes: "",
   originalLink: "",
-  managementCompanyId: "", // selected existing company id
-  managementCompanyName: "", // if adding new
+  managementCompanyId: "",
+  managementCompanyName: "",
   notes: "",
 };
 
@@ -26,17 +29,14 @@ export function AddPropertyModal({
   open,
   onClose,
   onCreate,
-
-  // NEW (optional)
-  companies = [], // [{ id, name }]
-  onCreateCompany, // async (name) => { id, name } OR void
+  companies = [],
+  onCreateCompany,
 }) {
   const [form, setForm] = useState(DEFAULTS);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  // UI-only state for the "add new company" flow
-  const [companyMode, setCompanyMode] = useState("select"); // "select" | "new"
+  const [companyMode, setCompanyMode] = useState("select");
   const [newCompanyName, setNewCompanyName] = useState("");
 
   const canSave = useMemo(() => {
@@ -59,7 +59,6 @@ export function AddPropertyModal({
   }
 
   function handleOverlayMouseDown() {
-    // close overlay click = just close (don’t wipe typed input)
     onClose();
   }
 
@@ -94,7 +93,6 @@ export function AddPropertyModal({
     setError("");
 
     try {
-      // If no handler yet, just store the name in-form
       if (typeof onCreateCompany !== "function") {
         setForm((p) => ({
           ...p,
@@ -106,7 +104,6 @@ export function AddPropertyModal({
         return;
       }
 
-      // Otherwise create + select it
       const created = await onCreateCompany(name);
       const createdId = created?.id;
 
@@ -131,14 +128,23 @@ export function AddPropertyModal({
     setError("");
 
     try {
-      // Normalize company field before save:
-      // - If they picked an existing company, keep managementCompanyId.
-      // - If they typed a new one but didn't create it yet, keep managementCompanyName.
+      const listingType = String(form.listingType || "rent");
+
       const payload = {
         ...form,
+        listingType,
+
+        // rent fields
+        rentMonthly: form.rentMonthly?.trim?.() ?? form.rentMonthly,
+
+        // buy fields
+        purchasePrice: form.purchasePrice?.trim?.() ?? form.purchasePrice,
+
+        // shared
+        hoaMonthly: form.hoaMonthly?.trim?.() ?? form.hoaMonthly,
+
         beds: String(form.beds || ""),
         baths: String(form.baths || ""),
-        rentMonthly: form.rentMonthly?.trim?.() ?? form.rentMonthly,
         sqft: form.sqft?.trim?.() ?? form.sqft,
         commuteMiles: form.commuteMiles?.trim?.() ?? form.commuteMiles,
         commuteMinutes: form.commuteMinutes?.trim?.() ?? form.commuteMinutes,
@@ -151,7 +157,6 @@ export function AddPropertyModal({
 
       await onCreate(payload);
 
-      // after successful save, reset
       setForm(DEFAULTS);
       setCompanyMode("select");
       setNewCompanyName("");
@@ -163,6 +168,8 @@ export function AddPropertyModal({
       setSaving(false);
     }
   }
+
+  const isBuy = String(form.listingType || "rent") === "buy";
 
   return (
     <div className="apm-overlay" onMouseDown={handleOverlayMouseDown}>
@@ -196,6 +203,15 @@ export function AddPropertyModal({
         ) : null}
 
         <div className="apm-grid">
+          {/* ✅ NEW: Listing type */}
+          <label className="apm-field">
+            <span>Listing Type</span>
+            <select value={form.listingType} onChange={set("listingType")}>
+              <option value="rent">For Rent</option>
+              <option value="buy">For Sale</option>
+            </select>
+          </label>
+
           <label className="apm-field">
             <span>Address *</span>
             <input
@@ -206,12 +222,36 @@ export function AddPropertyModal({
             />
           </label>
 
+          {/* ✅ Rent OR Purchase Price */}
+          {isBuy ? (
+            <label className="apm-field">
+              <span>Purchase Price</span>
+              <input
+                value={form.purchasePrice}
+                onChange={set("purchasePrice")}
+                placeholder="Enter Purchase Price"
+                inputMode="numeric"
+              />
+            </label>
+          ) : (
+            <label className="apm-field">
+              <span>Monthly Rent</span>
+              <input
+                value={form.rentMonthly}
+                onChange={set("rentMonthly")}
+                placeholder="Enter Monthly Rent"
+                inputMode="numeric"
+              />
+            </label>
+          )}
+
+          {/* ✅ HOA always available */}
           <label className="apm-field">
-            <span>Monthly Rent</span>
+            <span>HOA (Monthly)</span>
             <input
-              value={form.rentMonthly}
-              onChange={set("rentMonthly")}
-              placeholder="Enter Monthly Rent"
+              value={form.hoaMonthly}
+              onChange={set("hoaMonthly")}
+              placeholder="Enter HOA Monthly"
               inputMode="numeric"
             />
           </label>

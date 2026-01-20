@@ -1,3 +1,5 @@
+/* src/components/PropertyCard.css */
+
 .pc-card {
   border-radius: 22px;
   border: 1px solid var(--border);
@@ -20,7 +22,40 @@
   line-height: 1.2;
 }
 
-/* ✅ NEW: mgmt line */
+/* ✅ NEW: listing type pill */
+.pc-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.2px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.92);
+  white-space: nowrap;
+  line-height: 1;
+  user-select: none;
+}
+
+.pc-pill-rent {
+  background: rgba(120, 160, 255, 0.12);
+  border: 1px solid rgba(120, 160, 255, 0.25);
+}
+
+.pc-pill-buy {
+  background: rgba(255, 200, 80, 0.12);
+  border: 1px solid rgba(255, 200, 80, 0.25);
+}
+
+.pc-pill-unknown {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+/* ✅ mgmt line */
 .pc-mgmt {
   font-size: 12px;
   color: var(--muted2);
@@ -122,5 +157,10 @@
     height: 34px;
     min-width: 46px;
     font-size: 13px;
+  }
+
+  .pc-pill {
+    padding: 6px 9px;
+    font-size: 11px;
   }
 }

@@ -1,73 +1,103 @@
 // src/utils/scoring.js
 
-/**
- * Scoring model (0–100).
- *
- * You can adjust weights and formulas easily.
- * Current inputs are normalized 0–10 (except toggles).
- */
-
 function clamp(n, min, max) {
   const x = Number(n);
   if (!Number.isFinite(x)) return min;
   return Math.max(min, Math.min(max, x));
 }
 
-function to10(n) {
-  return clamp(n, 0, 10);
+function toNum(n, fallback = 0) {
+  const x = Number(n);
+  return Number.isFinite(x) ? x : fallback;
 }
 
-export function computeScore(property) {
-  const inputs = property?.scoreInputs || {};
+/**
+ * computeScore(propertyLike)
+ *
+ * Expects:
+ *   propertyLike.scoreInputs = {
+ *     commute, priceValue, neighborhood, layout, condition, light, noise (0-10 each),
+ *     mustHaveMiss (bool),
+ *     dealBreaker (bool),
+ *     scoringNotes (string)
+ *   }
+ *
+ * Returns:
+ *   { score: 0-100 integer, breakdown: {...} }
+ */
+export function computeScore(propertyLike = {}) {
+  const si = propertyLike.scoreInputs || {};
+
+  const dealBreaker = !!si.dealBreaker;
+  const mustHaveMiss = !!si.mustHaveMiss;
 
   // 0–10 sliders
-  const commute = to10(inputs.commute); // 10 = best commute
-  const priceValue = to10(inputs.priceValue); // 10 = best value for $$
-  const layout = to10(inputs.layout); // layout flow / livability
-  const light = to10(inputs.light); // natural light
-  const neighborhood = to10(inputs.neighborhood); // vibe / location
-  const noise = to10(inputs.noise); // 10 = quiet
-  const condition = to10(inputs.condition); // overall condition
+  const commute = clamp(si.commute, 0, 10);
+  const priceValue = clamp(si.priceValue, 0, 10);
+  const neighborhood = clamp(si.neighborhood, 0, 10);
+  const layout = clamp(si.layout, 0, 10);
+  const condition = clamp(si.condition, 0, 10);
+  const light = clamp(si.light, 0, 10);
+  const noise = clamp(si.noise, 0, 10);
 
-  // toggles
-  const dealBreaker = !!inputs.dealBreaker; // hard no
-  const mustHaveMiss = !!inputs.mustHaveMiss; // missing must-have
-
-  // weights (sum ~ 1.0)
-  const W = {
-    commute: 0.22,
-    priceValue: 0.22,
-    neighborhood: 0.16,
-    layout: 0.14,
-    condition: 0.12,
-    light: 0.08,
-    noise: 0.06,
+  // Weighting (tweak later anytime)
+  const weights = {
+    commute: 1.6,
+    priceValue: 1.5,
+    neighborhood: 1.5,
+    layout: 1.2,
+    condition: 1.1,
+    light: 0.7,
+    noise: 0.4,
   };
 
-  // base 0–10 weighted average
-  const base10 =
-    commute * W.commute +
-    priceValue * W.priceValue +
-    neighborhood * W.neighborhood +
-    layout * W.layout +
-    condition * W.condition +
-    light * W.light +
-    noise * W.noise;
+  const weightedSum =
+    commute * weights.commute +
+    priceValue * weights.priceValue +
+    neighborhood * weights.neighborhood +
+    layout * weights.layout +
+    condition * weights.condition +
+    light * weights.light +
+    noise * weights.noise;
 
-  // convert to 0–100
-  let score = Math.round(base10 * 10);
+  const weightTotal = Object.values(weights).reduce((a, b) => a + b, 0);
 
-  // penalties
-  if (dealBreaker) score = 0;
-  if (mustHaveMiss) score = Math.max(0, score - 25);
+  // Convert to 0–100
+  let score100 = (weightedSum / (10 * weightTotal)) * 100;
 
-  const breakdown = {
-    base10: Number(base10.toFixed(2)),
-    dealBreaker,
-    mustHaveMiss,
-    weights: W,
-    sliders: { commute, priceValue, neighborhood, layout, condition, light, noise },
+  // Penalties
+  const mustHavePenalty = mustHaveMiss ? 25 : 0;
+
+  if (dealBreaker) {
+    score100 = 0;
+  } else {
+    score100 = score100 - mustHavePenalty;
+  }
+
+  const finalScore = clamp(Math.round(score100), 0, 100);
+
+  return {
+    score: finalScore,
+    breakdown: {
+      inputs: {
+        commute,
+        priceValue,
+        neighborhood,
+        layout,
+        condition,
+        light,
+        noise,
+        mustHaveMiss,
+        dealBreaker,
+      },
+      weights,
+      weightTotal: toNum(weightTotal, 0),
+      baseScore: clamp(Math.round((weightedSum / (10 * weightTotal)) * 100), 0, 100),
+      penalties: {
+        mustHavePenalty,
+        dealBreaker: dealBreaker ? "score forced to 0" : "no",
+      },
+      finalScore,
+    },
   };
-
-  return { score, breakdown };
 }

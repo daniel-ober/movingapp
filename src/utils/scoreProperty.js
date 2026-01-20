@@ -17,7 +17,7 @@ function daysUntil(d) {
   if (!d) return null;
   const now = new Date();
   const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const target = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const target = new Date(d.getFullYear(), d.getMonthmdgetMonth(), d.getDate());
   const diffMs = target.getTime() - start.getTime();
   return Math.round(diffMs / (1000 * 60 * 60 * 24));
 }
@@ -95,6 +95,24 @@ export const CHECKLIST_LABELS = {
   seasonal_decor_space: "Seasonal decoration space",
 };
 
+// Listing types (for UI + scoring)
+export const LISTING_TYPES = ["rent", "buy", "unknown"];
+export const LISTING_TYPE_LABELS = {
+  rent: "For Rent",
+  buy: "For Sale",
+  unknown: "Listing",
+};
+
+// These are intentionally “reasonable defaults”.
+// If you want to tune later, only adjust these constants.
+const RENT_IDEAL = 2200; // <= this is best
+const RENT_MAX = 3200; // >= this is 0 score
+const HOA_PENALTY_START = 200; // HOA starts hurting a bit above this
+const HOA_PENALTY_MAX = 600; // big HOA hurts more
+
+const BUY_IDEAL = 450000; // <= this is best
+const BUY_MAX = 750000; // >= this is 0 score
+
 /**
  * computeOverallScore(property)
  * Returns:
@@ -103,7 +121,15 @@ export const CHECKLIST_LABELS = {
  *  - why: short bullet reasoning for the Winner card
  */
 export function computeOverallScore(property) {
+  const listingTypeRaw = String(property?.listingType || "rent");
+  const listingType = LISTING_TYPES.includes(listingTypeRaw)
+    ? listingTypeRaw
+    : "rent";
+
   const rent = Number(property?.rentMonthly) || 0;
+  const purchasePrice = Number(property?.purchasePrice) || 0;
+  const hoaMonthly = Number(property?.hoaMonthly) || 0;
+
   const commuteMin = Number(property?.commuteMinutes) || 0;
   const sqft = Number(property?.sqft) || 0;
   const beds = Number(property?.beds) || 0;
@@ -115,7 +141,8 @@ export function computeOverallScore(property) {
   const dealbreaker = !!checklist.dealbreaker;
 
   // DISQUALIFIER: move-in date 4/1 or later
-  if (isMoveInDisqualified(property?.earliestMoveIn)) {
+  // Only applies to rentals (move-in doesn’t really apply to “buy” unless you want it to)
+  if (listingType === "rent" && isMoveInDisqualified(property?.earliestMoveIn)) {
     const d = parseDateYYYYMMDD(property?.earliestMoveIn);
     const pretty = d
       ? d.toLocaleDateString("en-US", { month: "numeric", day: "numeric" })
@@ -126,6 +153,7 @@ export function computeOverallScore(property) {
       meta: {
         disqualifiedMoveIn: true,
         earliestMoveIn: property?.earliestMoveIn || "",
+        listingType,
       },
       why: [`Disqualified: move-in ${pretty} or later.`],
     };
@@ -135,7 +163,7 @@ export function computeOverallScore(property) {
   if (dealbreaker) {
     return {
       score: 0,
-      meta: { dealbreaker: true },
+      meta: { dealbreaker: true, listingType },
       why: ["Dealbreaker flagged."],
     };
   }
@@ -144,8 +172,32 @@ export function computeOverallScore(property) {
   // Commute (max 20): <=15 = 20, 25 = 14, 35 = 7, 45+ = 0
   const commuteScore = clamp(20 - ((commuteMin - 15) * 20) / 30, 0, 20);
 
-  // Rent (max 18): <=2200 = 18, 2500 = 12, 2900 = 5, 3200+ = 0
-  const rentScore = clamp(18 - ((rent - 2200) * 18) / 1000, 0, 18);
+  // Cost (max 18)
+  // - For rent: uses rentMonthly, with HOA penalty if HOA is high
+  // - For buy: uses purchasePrice
+  let costScore = 0;
+  let hoaPenalty = 0;
+
+  if (listingType === "buy") {
+    // <= BUY_IDEAL = 18, BUY_MAX = 0
+    // linear falloff between ideal and max
+    const t = BUY_MAX === BUY_IDEAL ? 1 : (purchasePrice - BUY_IDEAL) / (BUY_MAX - BUY_IDEAL);
+    costScore = clamp(18 - clamp(t, 0, 1) * 18, 0, 18);
+  } else {
+    // rent or unknown defaults to rent scoring
+    const t = RENT_MAX === RENT_IDEAL ? 1 : (rent - RENT_IDEAL) / (RENT_MAX - RENT_IDEAL);
+    costScore = clamp(18 - clamp(t, 0, 1) * 18, 0, 18);
+
+    // HOA penalty (small & gentle)
+    // 0 penalty under HOA_PENALTY_START; up to -3 by HOA_PENALTY_MAX
+    if (hoaMonthly > HOA_PENALTY_START) {
+      const ht =
+        HOA_PENALTY_MAX === HOA_PENALTY_START
+          ? 1
+          : (hoaMonthly - HOA_PENALTY_START) / (HOA_PENALTY_MAX - HOA_PENALTY_START);
+      hoaPenalty = clamp(clamp(ht, 0, 1) * 3, 0, 3);
+    }
+  }
 
   // Sqft (max 12): >=2200 = 12, 1800 = 8, 1400 = 4, 1100 = 0
   const sqftScore = clamp((sqft - 1100) / 1100, 0, 1) * 12;
@@ -154,19 +206,27 @@ export function computeOverallScore(property) {
   const bedsScore = beds >= 3 ? 5 : beds === 2 ? 3 : beds === 1 ? 1 : 0;
   const bathsScore = baths >= 2 ? 5 : baths >= 1.5 ? 3 : baths >= 1 ? 1 : 0;
 
-  // Move-in date (max 0–5 bonus, but 4/1+ is already disqualified above)
-  const d = parseDateYYYYMMDD(property?.earliestMoveIn);
-  const du = daysUntil(d);
+  // Move-in date (max 0–5 bonus; only for rent)
   let moveInScore = 0;
-  if (du != null) {
-    if (du <= 14) moveInScore = 5;
-    else if (du <= 30) moveInScore = 3;
-    else if (du <= 60) moveInScore = 1;
-    else moveInScore = 0;
+  if (listingType === "rent") {
+    const d = parseDateYYYYMMDD(property?.earliestMoveIn);
+    const du = daysUntil(d);
+    if (du != null) {
+      if (du <= 14) moveInScore = 5;
+      else if (du <= 30) moveInScore = 3;
+      else if (du <= 60) moveInScore = 1;
+      else moveInScore = 0;
+    }
   }
 
   const detailsScore =
-    commuteScore + rentScore + sqftScore + bedsScore + bathsScore + moveInScore;
+    commuteScore +
+    costScore +
+    sqftScore +
+    bedsScore +
+    bathsScore +
+    moveInScore -
+    hoaPenalty;
 
   // -------- CHECKLIST SCORE (max 40) --------
   // Must-haves:
@@ -204,23 +264,45 @@ export function computeOverallScore(property) {
   const why = [];
 
   if (commuteMin) why.push(`Commute: ${commuteMin} min`);
-  if (rent) why.push(`Rent: $${rent.toLocaleString()}/mo`);
+
+  if (listingType === "buy") {
+    if (purchasePrice) {
+      why.push(
+        `Price: ${purchasePrice.toLocaleString("en-US", {
+          style: "currency",
+          currency: "USD",
+          maximumFractionDigits: 0,
+        })}`
+      );
+    }
+  } else {
+    if (rent) {
+      const base = rent.toLocaleString("en-US", {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 0,
+      });
+      why.push(`Rent: ${base}/mo`);
+    }
+    if (hoaMonthly) why.push(`HOA: $${hoaMonthly.toLocaleString()}/mo`);
+  }
+
   if (sqft) why.push(`Space: ${sqft.toLocaleString()} sqft`);
 
-  if (mustMissingCount > 0)
-    why.push(`⚠ Missing ${mustMissingCount} must-have(s)`);
-  else if (mustMetCount >= 6)
-    why.push(`✅ Must-haves confirmed: ${mustMetCount}`);
+  if (mustMissingCount > 0) why.push(`⚠ Missing ${mustMissingCount} must-have(s)`);
+  else if (mustMetCount >= 6) why.push(`✅ Must-haves confirmed: ${mustMetCount}`);
 
   const trimmedWhy = why.slice(0, 3);
 
   return {
     score,
     meta: {
+      listingType,
       detailsScore: Number(detailsScore.toFixed(1)),
       checklistScore: Number(checklistScore.toFixed(1)),
       commuteScore: Number(commuteScore.toFixed(1)),
-      rentScore: Number(rentScore.toFixed(1)),
+      costScore: Number(costScore.toFixed(1)),
+      hoaPenalty: Number(hoaPenalty.toFixed(1)),
       sqftScore: Number(sqftScore.toFixed(1)),
       bedsScore,
       bathsScore,
@@ -229,8 +311,6 @@ export function computeOverallScore(property) {
       mustMissingCount,
       plusPoints,
     },
-    why: trimmedWhy.length
-      ? trimmedWhy
-      : ["Add checklist + details to rank it."],
+    why: trimmedWhy.length ? trimmedWhy : ["Add checklist + details to rank it."],
   };
 }

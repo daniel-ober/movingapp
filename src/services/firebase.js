@@ -1,6 +1,7 @@
 // src/services/firebase.js
 import { initializeApp, getApps } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 
 // ✅ Your Firebase config (from console)
 const firebaseConfig = {
@@ -16,5 +17,10 @@ const firebaseConfig = {
 // Avoid re-init on HMR
 const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 
+// ✅ Firestore
 export const db = getFirestore(app);
+
+// ✅ Auth (THIS was missing)
+export const auth = getAuth(app);
+
 export { app };

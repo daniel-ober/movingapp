@@ -17,7 +17,8 @@ function daysUntil(d) {
   if (!d) return null;
   const now = new Date();
   const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const target = new Date(d.getFullYear(), d.getMonthmdgetMonth(), d.getDate());
+  // ✅ fixed typo: d.getMonthmdgetMonth() -> d.getMonth()
+  const target = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const diffMs = target.getTime() - start.getTime();
   return Math.round(diffMs / (1000 * 60 * 60 * 24));
 }
@@ -104,7 +105,6 @@ export const LISTING_TYPE_LABELS = {
 };
 
 // These are intentionally “reasonable defaults”.
-// If you want to tune later, only adjust these constants.
 const RENT_IDEAL = 2200; // <= this is best
 const RENT_MAX = 3200; // >= this is 0 score
 const HOA_PENALTY_START = 200; // HOA starts hurting a bit above this
@@ -140,8 +140,7 @@ export function computeOverallScore(property) {
   const plus = checklist.pluses || {};
   const dealbreaker = !!checklist.dealbreaker;
 
-  // DISQUALIFIER: move-in date 4/1 or later
-  // Only applies to rentals (move-in doesn’t really apply to “buy” unless you want it to)
+  // DISQUALIFIER: move-in date 4/1 or later (rentals only)
   if (listingType === "rent" && isMoveInDisqualified(property?.earliestMoveIn)) {
     const d = parseDateYYYYMMDD(property?.earliestMoveIn);
     const pretty = d
@@ -159,7 +158,7 @@ export function computeOverallScore(property) {
     };
   }
 
-  // If any dealbreaker: hard zero
+  // Dealbreaker = hard zero
   if (dealbreaker) {
     return {
       score: 0,
@@ -169,27 +168,22 @@ export function computeOverallScore(property) {
   }
 
   // -------- DETAILS SCORE (max ~60) --------
-  // Commute (max 20): <=15 = 20, 25 = 14, 35 = 7, 45+ = 0
+  // Commute (max 20)
   const commuteScore = clamp(20 - ((commuteMin - 15) * 20) / 30, 0, 20);
 
   // Cost (max 18)
-  // - For rent: uses rentMonthly, with HOA penalty if HOA is high
-  // - For buy: uses purchasePrice
   let costScore = 0;
   let hoaPenalty = 0;
 
   if (listingType === "buy") {
-    // <= BUY_IDEAL = 18, BUY_MAX = 0
-    // linear falloff between ideal and max
-    const t = BUY_MAX === BUY_IDEAL ? 1 : (purchasePrice - BUY_IDEAL) / (BUY_MAX - BUY_IDEAL);
+    const t =
+      BUY_MAX === BUY_IDEAL ? 1 : (purchasePrice - BUY_IDEAL) / (BUY_MAX - BUY_IDEAL);
     costScore = clamp(18 - clamp(t, 0, 1) * 18, 0, 18);
   } else {
-    // rent or unknown defaults to rent scoring
-    const t = RENT_MAX === RENT_IDEAL ? 1 : (rent - RENT_IDEAL) / (RENT_MAX - RENT_IDEAL);
+    const t =
+      RENT_MAX === RENT_IDEAL ? 1 : (rent - RENT_IDEAL) / (RENT_MAX - RENT_IDEAL);
     costScore = clamp(18 - clamp(t, 0, 1) * 18, 0, 18);
 
-    // HOA penalty (small & gentle)
-    // 0 penalty under HOA_PENALTY_START; up to -3 by HOA_PENALTY_MAX
     if (hoaMonthly > HOA_PENALTY_START) {
       const ht =
         HOA_PENALTY_MAX === HOA_PENALTY_START
@@ -199,14 +193,14 @@ export function computeOverallScore(property) {
     }
   }
 
-  // Sqft (max 12): >=2200 = 12, 1800 = 8, 1400 = 4, 1100 = 0
+  // Sqft (max 12)
   const sqftScore = clamp((sqft - 1100) / 1100, 0, 1) * 12;
 
   // Beds/Baths (max 10 combined)
   const bedsScore = beds >= 3 ? 5 : beds === 2 ? 3 : beds === 1 ? 1 : 0;
   const bathsScore = baths >= 2 ? 5 : baths >= 1.5 ? 3 : baths >= 1 ? 1 : 0;
 
-  // Move-in date (max 0–5 bonus; only for rent)
+  // Move-in bonus (rent only, max 5)
   let moveInScore = 0;
   if (listingType === "rent") {
     const d = parseDateYYYYMMDD(property?.earliestMoveIn);
@@ -229,9 +223,6 @@ export function computeOverallScore(property) {
     hoaPenalty;
 
   // -------- CHECKLIST SCORE (max 40) --------
-  // Must-haves:
-  // +2 for each must-have satisfied, -5 for each explicitly missing.
-  // Unknown/unchecked = 0 impact until you confirm.
   let mustPoints = 0;
   let mustMissingCount = 0;
   let mustMetCount = 0;
@@ -247,7 +238,6 @@ export function computeOverallScore(property) {
     }
   }
 
-  // Pluses: +1 each if true (capped at 8)
   let plusPoints = 0;
   for (const key of PLUSES) {
     if (plus[key] === true) plusPoints += 1;
@@ -260,7 +250,7 @@ export function computeOverallScore(property) {
   const raw = detailsScore + checklistScore;
   const score = clamp(Math.round(raw), 0, 100);
 
-  // Build “why” bullets (top 3)
+  // top “why” bullets
   const why = [];
 
   if (commuteMin) why.push(`Commute: ${commuteMin} min`);
@@ -313,4 +303,9 @@ export function computeOverallScore(property) {
     },
     why: trimmedWhy.length ? trimmedWhy : ["Add checklist + details to rank it."],
   };
+}
+
+// ✅ Compatibility export for older imports (services/properties.js, etc.)
+export function scoreProperty(property) {
+  return computeOverallScore(property).score;
 }

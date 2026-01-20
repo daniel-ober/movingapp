@@ -1,0 +1,265 @@
+/* src/pages/SuperAdmin.css */
+
+.sa-shell {
+  min-height: 100vh;
+  padding: clamp(14px, 2.4vw, 28px);
+  color: var(--text);
+}
+
+.sa-topbar {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sa-topbar-left {
+  min-width: 0;
+}
+
+.sa-h1 {
+  font-weight: 950;
+  letter-spacing: 0.2px;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.sa-h2 {
+  margin-top: 4px;
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+.sa-topbar-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sa-alert {
+  max-width: 1180px;
+  margin: 14px auto 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 60, 60, 0.12);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 14px;
+}
+
+.sa-grid {
+  max-width: 1180px;
+  margin: 14px auto 0;
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 12px;
+}
+
+.sa-panel {
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+}
+
+.sa-panel-head {
+  padding: 14px 14px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.sa-panel-head-tight {
+  padding-top: 12px;
+  padding-bottom: 10px;
+}
+
+.sa-panel-title {
+  font-weight: 950;
+  letter-spacing: 0.2px;
+  font-size: 14px;
+}
+
+.sa-panel-meta {
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.sa-empty {
+  padding: 16px;
+  opacity: 0.85;
+  font-size: 13px;
+}
+
+.sa-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.sa-row {
+  width: 100%;
+  text-align: left;
+  padding: 12px 14px;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  transition: background 120ms ease, transform 120ms ease;
+}
+
+.sa-row:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateY(-1px);
+}
+
+.sa-row.is-active {
+  background: rgba(106, 168, 255, 0.12);
+}
+
+.sa-row-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.sa-row-name {
+  font-weight: 900;
+  font-size: 14px;
+  line-height: 1.2;
+  min-width: 0;
+}
+
+.sa-row-pill {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.85;
+  white-space: nowrap;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.sa-row-sub {
+  margin-top: 6px;
+  font-size: 12px;
+  opacity: 0.78;
+}
+
+.sa-detail {
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.sa-kv {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 10px;
+  align-items: center;
+}
+
+.sa-k {
+  font-size: 12px;
+  opacity: 0.75;
+  font-weight: 800;
+}
+
+.sa-v {
+  font-size: 13px;
+  font-weight: 700;
+  opacity: 0.92;
+}
+
+.sa-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+  font-size: 12px;
+}
+
+.sa-select {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+  padding: 10px 12px;
+  font-weight: 800;
+  outline: none;
+}
+
+.sa-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.sa-table {
+  padding: 12px 14px 14px;
+}
+
+.sa-thead {
+  display: grid;
+  grid-template-columns: 1fr 120px 1fr;
+  gap: 10px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.72;
+  padding: 0 0 10px;
+}
+
+.sa-tr {
+  display: grid;
+  grid-template-columns: 1fr 120px 1fr;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 13px;
+  align-items: center;
+}
+
+.sa-td {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sa-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.sa-note {
+  padding: 12px 14px 14px;
+  font-size: 12px;
+  opacity: 0.75;
+  line-height: 1.4;
+}
+
+@media (max-width: 980px) {
+  .sa-grid {
+    grid-template-columns: 1fr;
+  }
+}
